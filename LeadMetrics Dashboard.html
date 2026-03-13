@@ -1735,6 +1735,48 @@ function showToast(msg) {
 // ===== INIT =====
 render();
 </script>
+<script>
+    // Persist all dashboard inputs and textareas using localStorage
 
+    function initPersistence() {
+      // Select all inputs and textareas inside the document
+      const elements = document.querySelectorAll('input, textarea');
+
+      elements.forEach((el, index) => {
+        // Ensure each element has a unique id; if not, assign one
+        if (!el.id) {
+          el.id = 'lm_field_' + index;
+        }
+
+        const key = 'lm_' + el.id;
+
+        // Restore saved value, if any
+        const saved = localStorage.getItem(key);
+        if (saved !== null) {
+          // Handle checkboxes separately
+          if (el.type === 'checkbox') {
+            el.checked = saved === 'true';
+          } else {
+            el.value = saved;
+          }
+        }
+
+        // Save on change/input
+        const handler = () => {
+          if (el.type === 'checkbox') {
+            localStorage.setItem(key, el.checked.toString());
+          } else {
+            localStorage.setItem(key, el.value);
+          }
+        };
+
+        el.addEventListener('input', handler);
+        el.addEventListener('change', handler);
+      });
+    }
+
+    // Run after DOM is ready
+    window.addEventListener('DOMContentLoaded', initPersistence);
+  </script>
 </body>
 </html>
