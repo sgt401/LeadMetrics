@@ -1298,6 +1298,10 @@ tbody tr:hover { background: var(--surface-offset); }
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export
       </button>
+      <button class="btn btn-ghost" onclick="advanceWeek()" title="Move Week B into Week A and clear Week B for new data" style="color: var(--warning); border-color: var(--warning);">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        Advance Week
+      </button>
       <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveMetrics()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1688,6 +1692,41 @@ function closeEditModal() {
 
 function closeModalOnOverlay(e) {
   if (e.target === document.getElementById('editModal')) closeEditModal();
+}
+
+function advanceWeek() {
+  if (!confirm('Move Week B \u2192 Week A and clear Week B for new data?')) return;
+
+  // Copy Week B into Week A
+  weekA = Object.assign({}, weekB);
+
+  // Reset Week B to defaults (keep targets from the new Week A as sensible defaults)
+  weekB = EMPTY_WEEK();
+  weekB.csatTarget      = weekA.csatTarget;
+  weekB.qaTarget        = weekA.qaTarget;
+  weekB.ahtTarget       = weekA.ahtTarget;
+  weekB.adherenceTarget = weekA.adherenceTarget;
+  weekB.escTarget       = weekA.escTarget;
+
+  // Persist and re-render
+  saveWeekData();
+  render();
+
+  // Refresh the form inputs so the modal reflects the new state
+  const fields = ['week','csat','csatTarget','csatRaw','surveys','qa','qaTarget',
+    'tickets','fcr','aht','ahtTarget','resolution','agents',
+    'adherence','adherenceTarget','attendance','shrinkage','ot','staffed',
+    'escRate','escTarget','openCrit','openTotal','resTime','backlog'];
+  const setVal = (el, v) => { if (el) el.value = (v === 0 ? '' : v) || ''; };
+  fields.forEach(f => {
+    setVal(document.getElementById('fa-' + f), weekA[f]);
+    setVal(document.getElementById('fb-' + f), weekB[f] || '');
+  });
+  // Clear Week B date and zero-default target fields
+  const fbWeek = document.getElementById('fb-week');
+  if (fbWeek) fbWeek.value = '';
+
+  showToast('\u2713 Week B \u2192 A · Week B cleared');
 }
 
 function saveMetrics() {
